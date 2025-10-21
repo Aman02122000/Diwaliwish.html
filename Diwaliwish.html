@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Happy Diwali from Amandeep</title>
+  <style>
+    html,body{height:100%;margin:0}
+    body{
+      background:#000;
+      display:flex;align-items:center;justify-content:center;
+      overflow:hidden;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Helvetica,Arial,sans-serif
+    }
+    /* Put canvas behind overlay by z-index */
+    canvas{position:fixed;inset:0;pointer-events:none;z-index:0}
+
+    /* Overlay sits above canvas so text is visible */
+    #overlay{
+      position:fixed;inset:0;background:#000;
+      display:flex;align-items:center;justify-content:center;flex-direction:column;color:#fff;
+      z-index:2; transition:background-color 600ms ease;
+    }
+    #message{
+      font-size:28px;letter-spacing:1px;opacity:0;
+      transition:opacity 800ms ease, transform 800ms ease;transform:translateY(20px);
+      text-align:center; line-height:1.3
+    }
+    .btn{
+      position:fixed;right:12px;top:12px;
+      background:rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.18);
+      color:#fff;padding:8px 10px;border-radius:8px;font-size:13px;
+      backdrop-filter:blur(4px); z-index:3
+    }
+    #muteBtn{ top:52px }
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  </style>
+</head>
+<body>
+  <!-- Canvas is underlay -->
+  <canvas id="c"></canvas>
+
+  <!-- Overlay on top -->
+  <div id="overlay" aria-live="polite">
+    <div id="message" role="heading" aria-level="1">Happy Diwali from Amandeep 🎆</div>
+    <button class="btn" id="skipBtn" aria-describedby="hint">Show fireworks</button>
+    <span id="hint" class="sr-only">Tap anywhere or press Enter to start.</span>
+  </div>
+
+  <!-- Controls -->
+  <button class="btn" id="muteBtn" aria-pressed="false">🔊 Sound on</button>
+
+  <script>
+    /* ===== Canvas & Basics ===== */
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    let W = canvas.width = innerWidth;
+    let H = canvas.height = innerHeight;
+    addEventListener('resize',()=>{W=canvas.width=innerWidth;H=canvas.height=innerHeight});
+
+    function rand(min,max){return Math.random()*(max-min)+min}
+    function hue(){return Math.floor(rand(0,360))}
+
+    const fireworks = [];
+    const particles = [];
+
+    /* ===== Web Audio (simple synthesized pops) ===== */
+    let audioCtx = null;
+    let audioEnabled = true; // can be toggled
+    let audioUnlocked = false;
+
+    function unlockAudio(){
+      if(audioUnlocked) return;
+      try{
+        if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        // Create and stop a silent buffer to unlock on iOS
+        const buffer = audioCtx.createBuffer(1,1,audioCtx.sampleRate);
+        const source = audioCtx.createBufferSource();
+        source.buffer = buffer; source.connect(audioCtx.destination); source.start(0);
+        audioUnlocked = true;
+      }catch(e){ /* ignore */ }
+    }
+
+    function playBoom(baseFreq=160, dur=0.18){
+      if(!audioEnabled || !audioUnlocked || !audioCtx) return;
+      const t0 = audioCtx.currentTime;
+      // Noise-ish burst using detuned oscillators + decay
+      const o1 = audioCtx.createOscillator();
+      const o2 = audioCtx.createOscillator();
+      const g  = audioCtx.createGain();
+
+      o1.type='triangle'; o2.type='square';
+      o1.frequency.value = baseFreq;
+      o2.frequency.value = baseFreq*0.5;
+
+      // detune a bit
+      o1.detune.value = rand(-20,20);
+      o2.detune.value = rand(-40,40);
+
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(0.6, t0+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+
+      o1.connect(g); o2.connect(g); g.connect(audioCtx.destination);
+      o1.start(t0); o2.start(t0);
+      o1.stop(t0+dur); o2.stop(t0+dur);
+    }
+
+    function playCrackle(baseFreq=500, dur=0.07){
+      if(!audioEnabled || !audioUnlocked || !audioCtx) return;
+      const t0 = audioCtx.currentTime;
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type='square';
+      o.frequency.value = baseFreq + rand(-80,120);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(0.4, t0+0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(t0); o.stop(t0+dur);
+    }
+
+    /* ===== Firework Classes ===== */
+    class Firework{
+      constructor(x,y,tx,ty){
+        this.x=x;this.y=y;this.tx=tx;this.ty=ty;
+        this.vx=(tx-x)/25;this.vy=(ty-y)/25;
+        this.trail=[];this.done=false;this.h=hue();
+        this.playedLaunch=false;
+      }
+      update(){
+        // launch whoosh
+        if(!this.playedLaunch){ this.playedLaunch=true; playCrackle(700,0.05); }
+        this.trail.push({x:this.x,y:this.y});
+        if(this.trail.length>6) this.trail.shift();
+        this.x+=this.vx;this.y+=this.vy;this.vy+=0.05; // gravity
+        if(Math.hypot(this.x-this.tx,this.y-this.ty)<6){
+          this.explode();this.done=true;
+        }
+      }
+      explode(){
+        playBoom(140+Math.random()*120, 0.22);
+        const count = Math.floor(rand(50,110));
+        for(let i=0;i<count;i++){
+          const ang = Math.random()*Math.PI*2;
+          const speed = rand(1.2,6.2);
+          particles.push(new Particle(
+            this.x,this.y,
+            Math.cos(ang)*speed,Math.sin(ang)*speed,
+            this.h
+          ));
+        }
+      }
+      draw(){
+        ctx.beginPath();
+        for(let i=0;i<this.trail.length-1;i++){
+          const p1=this.trail[i],p2=this.trail[i+1];
+          ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);
+        }
+        ctx.strokeStyle=`hsl(${this.h} 100% 60%)`;
+        ctx.stroke();
+      }
+    }
+
+    class Particle{
+      constructor(x,y,vx,vy,h){
+        this.x=x;this.y=y;this.vx=vx;this.vy=vy;
+        this.life=rand(60,110);this.age=0;this.h=h;this.size=rand(1,3);
+      }
+      update(){
+        this.x+=this.vx;this.y+=this.vy;
+        this.vy+=0.02;this.vx*=0.99;this.vy*=0.99;this.age++;
+        // occasional crackle
+        if(this.age<5 && Math.random()<0.02) playCrackle(900,0.05);
+      }
+      draw(){
+        const alpha = Math.max(0,1 - this.age/this.life);
+        ctx.globalAlpha = alpha;
+        ctx.beginPath();
+        ctx.arc(this.x,this.y,this.size,0,Math.PI*2);
+        ctx.fillStyle = `hsl(${this.h} 100% 60%)`;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    /* ===== Launch & Animation ===== */
+    function launchFirework(){
+      const startX = rand(W*0.2,W*0.8);
+      const startY = H + 10;
+      const tx = rand(W*0.15,W*0.85);
+      const ty = rand(H*0.1,H*0.5);
+      fireworks.push(new Firework(startX,startY,tx,ty));
+    }
+
+    let frames = 0;
+    let messageShown = false;
+    let showAtMs = 7000; // show message ~7s after start as a fallback
+
+    function animate(){
+      requestAnimationFrame(animate);
+      ctx.fillStyle = 'rgba(0,0,0,0.15)';
+      ctx.fillRect(0,0,W,H);
+
+      // update fireworks
+      for(let i=fireworks.length-1;i>=0;i--){
+        fireworks[i].update();fireworks[i].draw();
+        if(fireworks[i].done) fireworks.splice(i,1);
+      }
+      // update particles
+      for(let i=particles.length-1;i>=0;i--){
+        particles[i].update();particles[i].draw();
+        if(particles[i].age>particles[i].life) particles.splice(i,1);
+      }
+
+      // periodically launch
+      if(frames%28===0 && frames<520){
+        launchFirework(); if(Math.random()>0.68) launchFirework();
+      }
+      frames++;
+
+      // reveal message either when showAtMs passed OR when the sky calms
+      if(!messageShown){
+        const elapsed = performance.now() - startTs;
+        const calmSky = (frames>380 && particles.length<20 && fireworks.length===0);
+        if(elapsed>=showAtMs || calmSky){
+          messageShown = true; showMessage();
+        }
+      }
+    }
+
+    function showMessage(){
+      const msg = document.getElementById('message');
+      msg.style.opacity = 1; msg.style.transform = 'translateY(0)';
+      // subtle sparkles behind text
+      for(let i=0;i<3;i++){
+        const x = W/2 + rand(-60,60); const y = H/2 + rand(-20,40);
+        const h = hue();
+        for(let k=0;k<30;k++){
+          particles.push(new Particle(
+            x,y, Math.cos(k/5)*rand(1,4), Math.sin(k/5)*rand(1,4), h
+          ));
+        }
+      }
+    }
+
+    /* ===== Start Sequence & Controls ===== */
+    let started=false;
+    let startTs=0;
+
+    function startSequence(){
+      if(started) return;
+      started=true; startTs = performance.now();
+      // Transparentize overlay so fireworks are visible but keep text container
+      document.getElementById('overlay').style.background = 'transparent';
+      frames=0; animate();
+    }
+
+    const skipBtn = document.getElementById('skipBtn');
+    const muteBtn = document.getElementById('muteBtn');
+
+    skipBtn.addEventListener('click',()=>{
+      unlockAudio(); startSequence();
+      skipBtn.style.display='none';
+    });
+
+    // Also start on any tap/click/Enter (mobile friendly)
+    function beginOnInteraction(){
+      unlockAudio(); startSequence();
+      skipBtn.style.display='none';
+      removeEventListener('click',beginOnInteraction);
+      removeEventListener('touchstart',beginOnInteraction);
+      removeEventListener('keydown',onKey);
+    }
+    function onKey(e){ if(e.key==='Enter') beginOnInteraction(); }
+
+    addEventListener('click',beginOnInteraction);
+    addEventListener('touchstart',beginOnInteraction,{passive:true});
+    addEventListener('keydown',onKey);
+
+    // If no interaction, still auto-start (sound may remain muted by browser)
+    setTimeout(()=>{ if(!started){ startSequence(); skipBtn.style.display='none'; } },2200);
+
+    // Mute toggle
+    muteBtn.addEventListener('click',()=>{
+      if(!audioCtx){ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+      if(audioCtx.state === 'suspended') audioCtx.resume();
+      audioEnabled = !audioEnabled;
+      muteBtn.textContent = audioEnabled ? '🔊 Sound on' : '🔇 Sound off';
+      muteBtn.setAttribute('aria-pressed', String(!audioEnabled));
+    });
+  </script>
+</body>
+</html>
