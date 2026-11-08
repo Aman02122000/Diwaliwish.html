@@ -1,0 +1,404 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Diwali Wishes From Amandeep 🪔</title>
+
+<style>
+
+/* GENERAL SETTINGS */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Georgia, serif;
+    min-height: 100vh;
+    overflow: hidden;
+    background: radial-gradient(circle, #641000, #180000 75%);
+    color: #fff3c4;
+}
+
+/* SCREEN DESIGN */
+
+.screen {
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* BACKGROUND GLOW */
+
+.screen::before {
+    content: "";
+    position: absolute;
+    width: 350px;
+    height: 350px;
+    background: #ff9d00;
+    filter: blur(130px);
+    opacity: 0.35;
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+/* MAIN HEADING */
+
+h1 {
+    font-size: clamp(35px, 7vw, 65px);
+    color: #ffd700;
+    text-shadow: 0 0 15px #ff8c00,
+                 0 0 30px #ff4500;
+    margin-bottom: 20px;
+    animation: glow 2s infinite alternate;
+    z-index: 2;
+}
+
+.subtitle {
+    font-size: 22px;
+    color: #ffe9a8;
+    line-height: 1.8;
+    margin-bottom: 35px;
+    z-index: 2;
+}
+
+/* OPEN BUTTON */
+
+.open-btn {
+    background: linear-gradient(45deg, #ffb300, #ff4500);
+    border: 2px solid #ffe6a0;
+    color: white;
+    padding: 17px 55px;
+    font-size: 22px;
+    font-weight: bold;
+    letter-spacing: 3px;
+    border-radius: 50px;
+    cursor: pointer;
+
+    box-shadow: 0 0 20px #ff9800,
+                0 0 40px #ff4500;
+
+    transition: 0.3s;
+    z-index: 2;
+}
+
+.open-btn:hover {
+    transform: scale(1.12);
+    box-shadow: 0 0 35px #ffd700;
+}
+
+/* DIYAS */
+
+.diya {
+    position: absolute;
+    bottom: 35px;
+    font-size: 55px;
+    animation: diyaGlow 1.5s infinite alternate;
+    z-index: 2;
+}
+
+.left-diya {
+    left: 10%;
+}
+
+.right-diya {
+    right: 10%;
+}
+
+/* FIREWORKS */
+
+.firework {
+    position: absolute;
+    font-size: 40px;
+    animation: firework 3s infinite;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.f1 {
+    top: 12%;
+    left: 15%;
+    animation-delay: 0s;
+}
+
+.f2 {
+    top: 20%;
+    right: 15%;
+    animation-delay: 1s;
+}
+
+.f3 {
+    top: 65%;
+    left: 8%;
+    animation-delay: 2s;
+}
+
+.f4 {
+    top: 60%;
+    right: 8%;
+    animation-delay: 1.5s;
+}
+
+.f5 {
+    top: 8%;
+    left: 48%;
+    animation-delay: 0.7s;
+}
+
+/* ANIMATIONS */
+
+@keyframes glow {
+    from {
+        text-shadow: 0 0 10px #ff9800;
+    }
+
+    to {
+        text-shadow: 0 0 30px #ffd700,
+                     0 0 50px #ff4500;
+    }
+}
+
+@keyframes diyaGlow {
+    from {
+        filter: drop-shadow(0 0 5px orange);
+    }
+
+    to {
+        filter: drop-shadow(0 0 25px gold);
+    }
+}
+
+@keyframes firework {
+    0% {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+
+    40% {
+        transform: scale(1.5);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+}
+
+/* VIDEO SCREEN */
+
+#videoScreen {
+    display: none;
+    background: radial-gradient(circle, #500c00, #100000);
+}
+
+.video-title {
+    color: #ffd700;
+    font-size: clamp(25px, 5vw, 40px);
+    margin-bottom: 25px;
+    z-index: 2;
+}
+
+/* VIDEO CONTAINER */
+
+.video-container {
+    width: min(90%, 850px);
+    aspect-ratio: 16 / 9;
+    border: 4px solid gold;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 0 35px orange;
+    z-index: 2;
+    background: black;
+}
+
+.video-container video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* FOOTER */
+
+.footer {
+    margin-top: 25px;
+    color: #ffe9a8;
+    font-size: 18px;
+    line-height: 1.6;
+    z-index: 2;
+}
+
+/* MOBILE RESPONSIVENESS */
+
+@media (max-width: 600px) {
+
+    .subtitle {
+        font-size: 18px;
+    }
+
+    .open-btn {
+        padding: 15px 40px;
+        font-size: 19px;
+    }
+
+    .diya {
+        font-size: 40px;
+    }
+
+    .left-diya {
+        left: 5%;
+    }
+
+    .right-diya {
+        right: 5%;
+    }
+
+    .video-container {
+        width: 95%;
+    }
+
+    .footer {
+        font-size: 15px;
+    }
+}
+
+</style>
+
+</head>
+
+<body>
+
+
+<!-- FIRST PAGE: WELCOME SCREEN -->
+
+<div class="screen" id="welcomeScreen">
+
+    <!-- FIREWORKS -->
+
+    <div class="firework f1">🎆</div>
+    <div class="firework f2">🎇</div>
+    <div class="firework f3">✨</div>
+    <div class="firework f4">🎆</div>
+    <div class="firework f5">✨</div>
+
+    <!-- WELCOME TEXT -->
+
+    <h1>🪔 Happy Diwali 🪔</h1>
+
+    <div class="subtitle">
+        Diwali Wishes From
+        <br>
+        <strong>Amandeep</strong>
+    </div>
+
+    <!-- OPEN BUTTON -->
+
+    <button class="open-btn" onclick="openWish()">
+        OPEN ✨
+    </button>
+
+    <!-- DIYAS -->
+
+    <div class="diya left-diya">🪔</div>
+    <div class="diya right-diya">🪔</div>
+
+</div>
+
+
+<!-- SECOND PAGE: VIDEO SCREEN -->
+
+<div class="screen" id="videoScreen">
+
+    <!-- FIREWORKS -->
+
+    <div class="firework f1">🎆</div>
+    <div class="firework f2">🎇</div>
+    <div class="firework f4">✨</div>
+
+    <!-- VIDEO HEADING -->
+
+    <h2 class="video-title">
+        ✨ A Special Diwali Wish For You ✨
+    </h2>
+
+    <!-- CLOUDINARY VIDEO -->
+
+    <div class="video-container">
+
+        <video
+            id="diwaliVideo"
+            controls
+            autoplay
+            playsinline
+            preload="auto">
+
+            <source
+                src="https://res.cloudinary.com/cqoaqtle/video/upload/v1794108117/vidssave.com_Jethalal_Happy_Diwali_Song_720P.mp4"
+                type="video/mp4">
+
+            Your browser does not support video playback.
+
+        </video>
+
+    </div>
+
+    <!-- FOOTER -->
+
+    <div class="footer">
+
+        🪔 Wishing You Happiness, Prosperity & Joy 🪔
+
+        <br><br>
+
+        With Love ❤️ From Amandeep
+
+    </div>
+
+</div>
+
+
+<!-- JAVASCRIPT -->
+
+<script>
+
+function openWish() {
+
+    // Hide welcome screen
+
+    document.getElementById("welcomeScreen").style.display = "none";
+
+    // Show video screen
+
+    document.getElementById("videoScreen").style.display = "flex";
+
+    // Start video
+
+    const video = document.getElementById("diwaliVideo");
+
+    video.currentTime = 0;
+
+    video.play().catch(error => {
+
+        console.log("Please press play to start the video.");
+
+    });
+
+}
+
+</script>
+
+</body>
+</html>
